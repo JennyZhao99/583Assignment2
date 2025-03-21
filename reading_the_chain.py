@@ -57,11 +57,31 @@ def is_ordered_block(w3, block_num):
 	Conveniently, most type 2 transactions set the gasPrice field to be min( tx.maxPriorityFeePerGas + block.baseFeePerGas, tx.maxFeePerGas )
 	"""
 	block = w3.eth.get_block(block_num, full_transactions=True)
-	ordered = False
 
-	# TODO YOUR CODE HERE
+	base_fee_per_gas = block.get('baseFeePerGas', 0) # Before EIP-1559, baseFeePerGas is 0
 
-	return ordered
+    # extract all transactions from the block
+	transactions = block.transactions
+
+    # store priority fees of all transactions
+	priority_fees = []
+
+	for tx in transactions:
+        # if it's a Type 2 transaction (after EIP-1559)
+		if 'maxPriorityFeePerGas' in tx:
+			priority_fee = min(tx['maxPriorityFeePerGas'], tx['maxFeePerGas'] - base_fee_per_gas)
+		else:
+            # if it's a Type 0 transaction (before EIP-1559)
+			priority_fee = tx['gasPrice'] - base_fee_per_gas
+
+		priority_fees.append(priority_fee)
+
+    # check if the priority fees are in decreasing order
+	for i in range(1, len(priority_fees)):
+		if priority_fees[i] > priority_fees[i - 1]:
+			return False 
+
+	return True
 
 
 def get_contract_values(contract, admin_address, owner_address):
