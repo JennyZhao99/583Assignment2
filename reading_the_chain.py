@@ -12,11 +12,34 @@ from web3.providers.rpc import HTTPProvider
 
 def connect_to_eth():
 	# TODO insert your code for this method from last week's assignment
+	url = "https://mainnet.infura.io/v3/03016c3bbdb5494f962fcd2d8ac441f1"  # FILL THIS IN
+	w3 = Web3(HTTPProvider(url))
+	assert w3.is_connected(), f"Failed to connect to provider at {url}"
 	return w3
 
 
 def connect_with_middleware(contract_json):
 	# TODO insert your code for this method from last week's assignment
+	with open(contract_json, "r") as f:
+		d = json.load(f)
+		d = d['bsc']
+		address = d['address']
+		abi = d['abi']
+
+	# TODO complete this method
+	# The first section will be the same as "connect_to_eth()" but with a BNB url
+	url = "https://bsc-testnet-rpc.publicnode.com"  # FILL THIS IN
+	w3 = Web3(HTTPProvider(url))
+	assert w3.is_connected(), f"Failed to connect to provider at {url}"
+
+	# The second section requires you to inject middleware into your w3 object and
+	# create a contract object. Read more on the docs pages at https://web3py.readthedocs.io/en/stable/middleware.html
+	# and https://web3py.readthedocs.io/en/stable/web3.contract.html
+	w3.middleware_onion.inject(ExtraDataToPOAMiddleware, layer=0)
+
+	checksum_address = Web3.to_checksum_address(address)
+	contract = w3.eth.contract(address=checksum_address, abi=abi)
+
 	return w3, contract
 
 
